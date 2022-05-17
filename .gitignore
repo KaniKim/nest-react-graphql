@@ -102,11 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
-
 *.csv
 *.dat
 *.out
-
 *.gz
 *.swp
 
@@ -116,16 +114,9 @@ tmp
 # Build
 public/css/main.css
 
-# Coverage reports
-
-
-# API keys and secrets
-
 
 # Dependency directory
 node_modules
-
-
 # Editors
 .idea
 *.iml

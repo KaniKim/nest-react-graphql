@@ -1,0 +1,20 @@
+{
+  "type": "postgres",
+  "host": "127.0.0.1",
+  "port": 5432,
+  "username": "kanikim",
+  "password": "123456",
+  "database": "nest",
+  "extra": {
+    "ssl": false
+  },
+  "synchronize": true,
+  "logging": false,
+  "entities": ["server/**/*.entity.ts"],
+  "migrations": ["server/migration/**/*.ts"],
+  "subscribers": ["server/subscriber/**/*.ts"],
+  "cli": {
+    "migrationsDir": "server/migration",
+    "subscribersDir": "server/subscriber"
+  }
+}
