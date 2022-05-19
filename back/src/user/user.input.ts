@@ -14,3 +14,12 @@ export class UserInput {
   @Field()
   readonly phone!: string;
 }
+
+@InputType()
+export class LoginInput {
+  @Field()
+  readonly email!: string;
+
+  @Field()
+  readonly password!: string;
+}

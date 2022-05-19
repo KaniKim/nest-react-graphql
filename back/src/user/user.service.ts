@@ -1,50 +1,67 @@
-import {Injectable, Logger} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import {UserRepository} from "./user.repository";
 import {InjectRepository} from "@nestjs/typeorm";
 import {Users} from "./user.entity";
-import {UserDto} from "./user.dto";
 import {UserInput} from "./user.input";
-import { v4 as uuid } from "uuid";
-import {IsDate} from "class-validator";
+import {hash, isHashValid} from "./library/cipher";
+import {JwtService} from "@nestjs/jwt";
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(Users) private readonly userRepository: UserRepository) {}
+  constructor(
+        @InjectRepository(Users)
+        private readonly userRepository: UserRepository,
+        private jwtService: JwtService
+  ) {
+  }
 
   async createOneUser(createUserDto: UserInput) {
-    try {
-      await this.userRepository.createQueryBuilder()
-        .insert()
-        .into(Users)
-        .values({
-          name: createUserDto.name,
-          email: createUserDto.email,
-          password: createUserDto.password,
-          phone: createUserDto.phone,
-          updated_at: new Date(),
-          created_at: new Date()
-        })
-        .execute();
-      return createUserDto;
-    } catch (e) {
-      Logger.log(e);
+    const {name, email, password, phone} = createUserDto ;
+    const created_at = new Date();
+    const updated_at = new Date();
+    const hashed_password = await hash(password);
+    const id = (await this.userRepository.createQueryBuilder()
+      .insert()
+      .into(Users)
+      .values({
+        name: name,
+        email: email,
+        password: hashed_password,
+        phone: phone,
+        updated_at: updated_at,
+        created_at: created_at
+      })
+      .execute()).raw[0].id;
+
+    return {
+      id: id,
+      name: name,
+      email: email,
+      phone: phone,
+      created_at: created_at,
+      updated_at: updated_at
+    };
+    
+  }
+
+  async loginUser(email: string, password: string) {
+
+    const user = (await this.userRepository.query(
+      `SELECT email, password
+               FROM users
+               WHERE email='${email}'`
+    ))[0];
+    if(user === undefined) {
+      throw new Error("There is no user to find");
+    }
+    if (user.email === email && await isHashValid(password, user.password)) {
+      const payload = {username: user.email};
+      return this.jwtService.sign(payload);
     }
 
   }
 
   getUserList() {
     return this.userRepository.find();
-  }
-
-  getDetailUser(id: number) {
-    return this.userRepository.findOne(id);
-  }
-
-  updateUser(id: number, updateUserDto: UserDto) {
-    return this.userRepository.update(id, updateUserDto);
-  }
-
-  removeOneUser(id: number) {
-    return this.userRepository.delete(id);
   }
 }
